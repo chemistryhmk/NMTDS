@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НМТ-Тренажер: Дисперсні системи</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        chem: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                            dark: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-teal-500 selection:text-white">
+
+    <!-- TOP HEADER / STATS BAR -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-700/60 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-cyan-300 to-sky-400">
+                        Дисперсні Системи
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">НМТ-Тренажер & Лабораторія (11 клас)</p>
+                </div>
+            </div>
+
+            <!-- Global Score & Progress Badge -->
+            <div class="flex items-center space-x-4 sm:space-x-6">
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-solid fa-star text-amber-400 animate-pulse"></i>
+                    <span class="text-xs text-slate-400 uppercase font-bold">Бали:</span>
+                    <span id="globalScore" class="font-extrabold text-amber-400 text-base">0</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-solid fa-graduation-cap text-cyan-400"></i>
+                    <span class="text-xs text-slate-400 uppercase font-bold">НМТ Оцінка:</span>
+                    <span id="nmtScore" class="font-extrabold text-cyan-400 text-base">100 / 200</span>
+                </div>
+                <button id="soundToggleBtn" onclick="toggleAudio()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-300 transition-colors" title="Перемикач звуку">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-teal-400"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress bar across modes -->
+        <div class="w-full bg-slate-800 h-1.5">
+            <div id="overallProgressBar" class="bg-gradient-to-r from-teal-500 via-cyan-400 to-emerald-400 h-1.5 transition-all duration-500" style="width: 5%;"></div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="max-w-6xl mx-auto px-4 mt-6 w-full">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-800/60 p-1.5 rounded-2xl border border-slate-700/80">
+            <button onclick="switchTab('lotto')" id="tab-lotto" class="nav-tab active-tab flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 bg-teal-600 text-white shadow-md">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>1. Сортувальне Лото</span>
+            </button>
+            <button onclick="switchTab('lab')" id="tab-lab" class="nav-tab flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                <i class="fa-solid fa-vial-circle-check"></i>
+                <span>2. Лабораторія</span>
+            </button>
+            <button onclick="switchTab('matrix')" id="tab-matrix" class="nav-tab flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                <i class="fa-solid fa-cubes"></i>
+                <span>3. Конструктор</span>
+            </button>
+            <button onclick="switchTab('blitz')" id="tab-blitz" class="nav-tab flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span>4. НМТ-Бліц</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN GAME CONTAINER -->
+    <main class="max-w-6xl mx-auto px-4 my-6 flex-1 w-full">
+
+        <!-- MODULE 1: СОРТУВАЛЬНЕ ЛОТО -->
+        <section id="module-lotto" class="tab-content block">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-700/80">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-teal-500/20 text-teal-300 border border-teal-500/30 mb-1">Рівень 1</span>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            Сортувальне лото: Розмір частинок
+                        </h2>
+                        <p class="text-sm text-slate-400">Розподіли об'єкти з життя за трьома фундаментальними категоріями дисперсності.</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="lottoCounter" class="text-sm font-semibold text-teal-400">Картка 1 з 8</span>
+                    </div>
+                </div>
+
+                <!-- Active Card Arena -->
+                <div id="lottoGameArea" class="space-y-8">
+                    <div class="flex justify-center">
+                        <div id="activeLottoCard" class="w-full max-w-lg bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-teal-500/50 rounded-2xl p-6 text-center shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                            <div class="text-5xl mb-3" id="lottoIcon">🥤</div>
+                            <h3 id="lottoTitle" class="text-2xl font-extrabold text-white mb-2">Завантаження...</h3>
+                            <p id="lottoDesc" class="text-sm text-slate-300 mb-4">Опис картки</p>
+                            <div class="inline-flex items-center space-x-2 text-xs font-semibold text-slate-400 bg-slate-800/90 px-3 py-1.5 rounded-full border border-slate-700">
+                                <i class="fa-solid fa-question-circle text-teal-400"></i>
+                                <span>Обери відповідну групу:</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drop Target Buttons -->
+                    <div id="lottoButtonsArea" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="submitLotto('true_solution')" class="group p-5 bg-slate-800 hover:bg-teal-950/60 border-2 border-slate-700 hover:border-teal-500 rounded-2xl transition-all text-left shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">&lt; 1 нм</span>
+                                <i class="fa-solid fa-circle-nodes text-teal-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            </div>
+                            <h4 class="font-bold text-white text-base group-hover:text-teal-300">Істинні розчини</h4>
+                            <p class="text-xs text-slate-400 mt-1">Гомогенні, абсолютно прозорі, молекули/іони, не випадають в осад.</p>
+                        </button>
+
+                        <button onclick="submitLotto('colloid')" class="group p-5 bg-slate-800 hover:bg-cyan-950/60 border-2 border-slate-700 hover:border-cyan-500 rounded-2xl transition-all text-left shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">1 – 100 нм</span>
+                                <i class="fa-solid fa-atom text-cyan-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            </div>
+                            <h4 class="font-bold text-white text-base group-hover:text-cyan-300">Колоїдні розчини</h4>
+                            <p class="text-xs text-slate-400 mt-1">Мікрогетерогенні (золі, гелі), проявляють ефект Тіндаля.</p>
+                        </button>
+
+                        <button onclick="submitLotto('coarse')" class="group p-5 bg-slate-800 hover:bg-amber-950/60 border-2 border-slate-700 hover:border-amber-500 rounded-2xl transition-all text-left shadow-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">&gt; 100 нм</span>
+                                <i class="fa-solid fa-cubes text-amber-400 text-lg group-hover:scale-110 transition-transform"></i>
+                            </div>
+                            <h4 class="font-bold text-white text-base group-hover:text-amber-300">Грубодисперсні</h4>
+                            <p class="text-xs text-slate-400 mt-1">Явно гетерогенні (суспензії, емульсії), каламутні, нестійкі.</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lotto Feedback Modal / Message -->
+                <div id="lottoFeedback" class="hidden mt-6 p-4 rounded-xl border bg-slate-800/90 text-slate-200">
+                    <div class="flex items-start gap-3">
+                        <div id="lottoFeedbackIcon" class="text-3xl mt-0.5"></div>
+                        <div class="flex-1">
+                            <h4 id="lottoFeedbackTitle" class="font-bold text-base mb-1"></h4>
+                            <p id="lottoFeedbackBody" class="text-xs sm:text-sm text-slate-300"></p>
+                            <button onclick="nextLottoCard()" class="mt-3 px-5 py-2 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold rounded-lg text-xs transition-colors shadow-md flex items-center gap-2">
+                                <span>Наступна картка</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 2: ВІРТУАЛЬНА ЛАБОРАТОРІЯ -->
+        <section id="module-lab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Interactive Simulation Beaker -->
+                <div class="lg:col-span-7 glass-panel rounded-2xl p-6 shadow-xl border border-slate-700/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/60">
+                            <div>
+                                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 mb-1">Рівень 2</span>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-flask-vial text-cyan-400"></i>
+                                    Віртуальна Лабораторія
+                                </h2>
+                            </div>
+                            <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">Інтерактивний оптичний симулятор</span>
+                        </div>
+
+                        <p class="text-sm text-slate-300 mb-4">Обери розчин у склянці та увімкніть лазерний промінь, щоб спостерігати наявність або відсутність <strong>Ефекту Тіндаля</strong>.</p>
+
+                        <!-- Solution Selector Buttons -->
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <button onclick="setLabSolution('salt')" id="labBtn-salt" class="lab-sol-btn p-2.5 bg-slate-800 border-2 border-teal-500 rounded-xl text-xs font-bold text-center transition-all hover:bg-slate-700 text-white">
+                                🧪 Розчин кухонної солі (NaCl)
+                            </button>
+                            <button onclick="setLabSolution('colloid')" id="labBtn-colloid" class="lab-sol-btn p-2.5 bg-slate-800 border-2 border-slate-700 rounded-xl text-xs font-bold text-center transition-all hover:bg-slate-700 text-slate-300">
+                                🥚 Яєчний білок у воді (Золь)
+                            </button>
+                            <button onclick="setLabSolution('suspension')" id="labBtn-suspension" class="lab-sol-btn p-2.5 bg-slate-800 border-2 border-slate-700 rounded-xl text-xs font-bold text-center transition-all hover:bg-slate-700 text-slate-300">
+                                🪨 Крейда у воді (Суспензія)
+                            </button>
+                        </div>
+
+                        <!-- CANVAS SIMULATION BOX -->
+                        <div class="relative w-full h-64 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
+                            <canvas id="tyndallCanvas" class="w-full h-full block"></canvas>
+
+                            <!-- Laser Control Overlay -->
+                            <div class="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 flex items-center space-x-3">
+                                <span class="text-xs font-bold text-slate-300">Лазер:</span>
+                                <button onclick="toggleLaser()" id="laserToggleBtn" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs rounded-lg transition-colors shadow">
+                                    <i class="fa-solid fa-power-off mr-1"></i> УВІМКНУТИ
+                                </button>
+                            </div>
+
+                            <!-- Beaker Info Tag -->
+                            <div class="absolute top-3 right-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 text-right">
+                                <span id="beakerTagTitle" class="block text-xs font-extrabold text-teal-400">Істинний розчин</span>
+                                <span id="beakerTagDetail" class="text-[10px] text-slate-400">Частинки &lt; 1 нм</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Experiement: Coagulation Trigger -->
+                    <div class="mt-4 pt-4 border-t border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-200">Додатковий дослід: Коагуляція білка</h4>
+                            <p class="text-[11px] text-slate-400">Додати електроліт (H<sup>+</sup> або сіль важкого металу)</p>
+                        </div>
+                        <button onclick="triggerCoagulationExperiment()" class="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-lemon"></i> Капнути кислоту
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Scenario Questions & Explanations -->
+                <div class="lg:col-span-5 glass-panel rounded-2xl p-6 shadow-xl border border-slate-700/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/60">
+                            <h3 class="font-bold text-base text-white flex items-center gap-2">
+                                <i class="fa-solid fa-user-ninja text-amber-400"></i> Детективний кейс НМТ
+                            </h3>
+                            <span id="labCaseCounter" class="text-xs text-amber-400 font-bold">Кейс 1 з 2</span>
+                        </div>
+
+                        <div id="labCaseContent" class="space-y-4">
+                            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                                <h4 id="labCaseQuestionTitle" class="font-bold text-sm text-amber-300 mb-2">Кейс №1: Загадка променів у темряві</h4>
+                                <p id="labCaseQuestionBody" class="text-xs text-slate-300 leading-relaxed">
+                                    Водій уночі їде у тумані й вмикає фарне світло. Навпроти фар з'являється чітко помітний сяючий промінь-конус. Чому світло видно у тумані, але його не видно в сухому чистому повітрі?
+                                </p>
+                            </div>
+
+                            <div id="labCaseOptions" class="space-y-2">
+                                <!-- Options generated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Case Feedback / Next button -->
+                    <div id="labCaseFeedback" class="hidden mt-4 p-3 rounded-xl bg-slate-800 border border-slate-700">
+                        <p id="labCaseFeedbackText" class="text-xs text-slate-300 mb-2"></p>
+                        <button onclick="nextLabCase()" class="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold text-xs rounded-lg transition-colors">
+                            Наступний кейс <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MODULE 3: КОНСТРУКТОР ТИПІВ -->
+        <section id="module-matrix" class="tab-content hidden">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-700/80">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30 mb-1">Рівень 3</span>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-cubes-stacked text-purple-400"></i>
+                            Конструктор "Зліпи систему"
+                        </h2>
+                        <p class="text-sm text-slate-400">Обери поєднання агрегатних станів Фази та Середовища, щоб дізнатися тип та приклади НМТ.</p>
+                    </div>
+                    <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-bold text-purple-300">
+                        Знайдено комбінацій: <span id="matrixDiscoveredCount">0</span> з 7
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- Phase Selection -->
+                    <div class="md:col-span-4 bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                            <i class="fa-solid fa-droplet"></i> 1. Дисперсна фаза (Що розподілено?)
+                        </h3>
+                        <div class="space-y-2">
+                            <button onclick="selectMatrixPhase('solid')" id="mPhase-solid" class="m-phase-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-purple-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>🧊 Тверда речовина</span>
+                                <i class="fa-solid fa-cube text-purple-400"></i>
+                            </button>
+                            <button onclick="selectMatrixPhase('liquid')" id="mPhase-liquid" class="m-phase-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-purple-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>💧 Рідина</span>
+                                <i class="fa-solid fa-water text-cyan-400"></i>
+                            </button>
+                            <button onclick="selectMatrixPhase('gas')" id="mPhase-gas" class="m-phase-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-purple-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>💨 Газ</span>
+                                <i class="fa-solid fa-wind text-teal-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Plus Symbol -->
+                    <div class="md:col-span-1 flex justify-center text-slate-500 text-2xl font-bold">
+                        <i class="fa-solid fa-plus"></i>
+                    </div>
+
+                    <!-- Medium Selection -->
+                    <div class="md:col-span-4 bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-3">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-box-open"></i> 2. Дисперсійне середовище (Де плаває?)
+                        </h3>
+                        <div class="space-y-2">
+                            <button onclick="selectMatrixMedium('liquid')" id="mMed-liquid" class="m-med-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-cyan-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>🌊 У Рідині</span>
+                                <i class="fa-solid fa-water text-cyan-400"></i>
+                            </button>
+                            <button onclick="selectMatrixMedium('gas')" id="mMed-gas" class="m-med-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-cyan-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>☁️ У Газі (повітрі)</span>
+                                <i class="fa-solid fa-cloud text-slate-300"></i>
+                            </button>
+                            <button onclick="selectMatrixMedium('solid')" id="mMed-solid" class="m-med-btn w-full p-3 bg-slate-900 border-2 border-slate-700 hover:border-cyan-500 rounded-xl text-left text-xs font-bold text-slate-200 transition-all flex items-center justify-between">
+                                <span>🧱 У Твердому тілі</span>
+                                <i class="fa-solid fa-cubes text-amber-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Result Panel -->
+                    <div class="md:col-span-3 bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-2xl border-2 border-purple-500/40 text-center shadow-xl">
+                        <div class="text-xs uppercase font-extrabold text-purple-400 mb-1">Одержаний тип:</div>
+                        <h4 id="matrixResultTitle" class="text-xl font-extrabold text-white mb-2">Обери параметри</h4>
+                        <div id="matrixResultIcon" class="text-3xl my-2">🧩</div>
+                        <p id="matrixResultDesc" class="text-xs text-slate-300 leading-relaxed mb-3">Клацни на один варіант зліва та один справа.</p>
+                        <div id="matrixResultExamples" class="hidden text-left bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                            <span class="text-[10px] font-bold text-teal-400 uppercase block mb-1">Приклади для НМТ:</span>
+                            <ul id="matrixExamplesList" class="text-xs text-slate-200 list-disc list-inside space-y-0.5"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODULE 4: БЛІЦ "ПАСТКИ НМТ" -->
+        <section id="module-blitz" class="tab-content hidden">
+            <div class="glass-panel rounded-2xl p-6 shadow-xl border border-slate-700/80 max-w-3xl mx-auto">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/60">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-1">Рівень 4</span>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> НМТ-Бліц: Антипастка
+                        </h2>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div id="blitzTimerBox" class="bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-extrabold text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-stopwatch"></i> <span id="blitzTimeLeft">15</span>с
+                        </div>
+                        <span id="blitzQuestionCounter" class="text-xs font-bold text-slate-400">Питання 1/5</span>
+                    </div>
+                </div>
+
+                <!-- Active Question Box -->
+                <div id="blitzBox" class="space-y-6">
+                    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 rounded-2xl border border-amber-500/30 shadow-inner text-center">
+                        <div id="blitzTrapBadge" class="inline-block text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
+                            ⚠️ Класична пастка НМТ
+                        </div>
+                        <h3 id="blitzQuestionText" class="text-lg font-extrabold text-white leading-relaxed">
+                            "Коров'яче молоко та вапняне молоко належать до одного типу дисперсних систем — емульсій."
+                        </h3>
+                    </div>
+
+                    <!-- True / False Buttons -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="answerBlitz(true)" class="p-4 bg-emerald-950/40 hover:bg-emerald-900/60 border-2 border-emerald-500/60 hover:border-emerald-400 rounded-2xl transition-all text-center group shadow-lg">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-2xl mb-1 group-hover:scale-110 transition-transform"></i>
+                            <span class="block font-extrabold text-white text-base">ПРАВДА</span>
+                            <span class="text-[11px] text-emerald-300">Твердження правильне</span>
+                        </button>
+
+                        <button onclick="answerBlitz(false)" class="p-4 bg-rose-950/40 hover:bg-rose-900/60 border-2 border-rose-500/60 hover:border-rose-400 rounded-2xl transition-all text-center group shadow-lg">
+                            <i class="fa-solid fa-circle-xmark text-rose-400 text-2xl mb-1 group-hover:scale-110 transition-transform"></i>
+                            <span class="block font-extrabold text-white text-base">НЕПРАВДА</span>
+                            <span class="text-[11px] text-rose-300">Твердження хибне</span>
+                        </button>
+                    </div>
+
+                    <!-- Blitz Feedback -->
+                    <div id="blitzFeedback" class="hidden p-4 rounded-xl bg-slate-800 border border-slate-700 text-slate-200">
+                        <div class="flex items-start gap-3">
+                            <div id="blitzFeedbackIcon" class="text-2xl"></div>
+                            <div class="flex-1">
+                                <h4 id="blitzFeedbackTitle" class="font-bold text-sm mb-1"></h4>
+                                <p id="blitzFeedbackExplanation" class="text-xs text-slate-300 leading-relaxed"></p>
+                                <button onclick="nextBlitzQuestion()" class="mt-3 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition-colors">
+                                    Далі <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FINAL RESULT CERTIFICATE MODAL -->
+    <div id="resultModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full rounded-3xl p-6 sm:p-8 border-2 border-teal-500/50 text-center shadow-2xl relative overflow-hidden">
+            <!-- Decorative Glow Background -->
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-teal-500/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-cyan-500/20 rounded-full blur-2xl"></div>
+
+            <div class="w-16 h-16 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 text-3xl rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 class="text-2xl font-extrabold text-white mb-1">Вітаємо! Тренажер пройдено!</h2>
+            <p class="text-xs text-slate-400 mb-6">Ви опрацювали ключові теорії та пастки НМТ з Дисперсних систем.</p>
+
+            <!-- Final Score Summary -->
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3 mb-6">
+                <div class="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Загальний рахунок балів:</span>
+                    <span id="certPoints" class="font-bold text-amber-400">0</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Прогнозована оцінка НМТ:</span>
+                    <span id="certNmtScore" class="font-extrabold text-cyan-400 text-lg">200 / 200</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-400">Статус підготовки:</span>
+                    <span id="certStatus" class="font-bold text-emerald-400">Експерт з Дисперсних систем</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="resetAllProgress()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors border border-slate-700">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Спочатку
+                </button>
+                <button onclick="closeModal()" class="flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-slate-950 font-extrabold text-xs rounded-xl transition-colors shadow-lg">
+                    Продовжити розбір
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="glass-panel border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>© НМТ Хімія 11 клас — Інтерактивний урок "Дисперсні системи"</span>
+            <span class="text-teal-400/80"><i class="fa-solid fa-atom mr-1"></i> Готовність до НМТ 100%</span>
+        </div>
+    </footer>
+
+    <script>
+        // GLOBAL STATE
+        const state = {
+            score: 0,
+            nmtScore: 100,
+            currentTab: 'lotto',
+            lottoIndex: 0,
+            labSolution: 'salt',
+            laserOn: false,
+            labCaseIndex: 0,
+            matrixPhase: null,
+            matrixMedium: null,
+            discoveredMatrix: new Set(),
+            blitzIndex: 0,
+            blitzTimer: null,
+            blitzTimeLeft: 15,
+            soundEnabled: true
+        };
+
+        // SOUND EFFECTS SYNTHESIZER
+        let audioCtx = null;
+        function playFx(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(130, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {}
+        }
+
+        function toggleAudio() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (state.soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-teal-400";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-slate-500";
+            }
+        }
+
+        function updateScore(pointsToAdd) {
+            state.score += pointsToAdd;
+            document.getElementById('globalScore').textContent = state.score;
+
+            // Convert raw score to 100-200 NMT scale
+            const maxPoints = 250;
+            const percentage = Math.min(1, state.score / maxPoints);
+            state.nmtScore = Math.round(100 + percentage * 100);
+            document.getElementById('nmtScore').textContent = `${state.nmtScore} / 200`;
+
+            const progressBar = document.getElementById('overallProgressBar');
+            progressBar.style.width = `${Math.max(5, percentage * 100)}%`;
+        }
+
+        // MODULE 1: LOTTO DATA & LOGIC
+        const lottoCards = [
+            {
+                title: "Мінеральна газована вода без газу",
+                icon: "🥤",
+                desc: "Прозора рідина з повністю розчиненими солями Na⁺, Cl⁻, Ca²⁺.",
+                type: "true_solution",
+                exp: "Правильно! Розчинені солі утворюють істинний розчин з частинками менше 1 нм."
+            },
+            {
+                title: "Яєчний білок у воді (Золь)",
+                icon: "🥚",
+                desc: "Суміш високомолекулярних білків (альбумінів) у водному середовищі.",
+                type: "colloid",
+                exp: "Вірно! Молекули білка мають розмір від 1 до 100 нм і утворюють колоїдний розчин (золь)."
+            },
+            {
+                title: "Вапняне молоко",
+                icon: "🥛",
+                desc: "Завись дрібних частинок малорозчинного кальцій гідроксиду Ca(OH)₂ у воді.",
+                type: "coarse",
+                exp: "Чудово! Вапняне молоко — це суспензія (грубодисперсна система з частинками понад 100 нм)."
+            },
+            {
+                title: "Столовий 9% оцет",
+                icon: "🧪",
+                desc: "Прозора суміш оцтової кислоти CH₃COOH та води.",
+                type: "true_solution",
+                exp: "Абсолютно вірно! Це істинний розчин молекул та іонів оцтової кислоти."
+            },
+            {
+                title: "Вечірній туман над річкою",
+                icon: "🌫️",
+                desc: "Дрібні краплі води, завішені у повітряному середовищі.",
+                type: "colloid",
+                exp: "Правильно! Туман — це аерозоль із розміром крапель у колоїдному діапазоні (1–100 нм), що викликає ефект Тіндаля."
+            },
+            {
+                title: "Рослинна олія у воді після збивання",
+                icon: "🫗",
+                desc: "Краплі рідкого жиру, розподілені у водному середовищі.",
+                type: "coarse",
+                exp: "Вірно! Це емульсія (грубодисперсна система з частинками крапель понад 100 нм)."
+            },
+            {
+                title: "Плазма крові людини",
+                icon: "🩸",
+                desc: "Складна біологічна рідина з розчиненими білками та солями.",
+                type: "colloid",
+                exp: "Точно! Кров та плазма — це колоїдні системи високомолекулярних сполук."
+            },
+            {
+                title: "Солодкий чай без чаїнок",
+                icon: "☕",
+                desc: "Повністю прозора рідина з розчиненою сахарозою C₁₂H₂₂O₁₁.",
+                type: "true_solution",
+                exp: "Правильно! Молекули цукру повністю розчинені й мають розмір менше 1 нм."
+            }
+        ];
+
+        function renderLottoCard() {
+            if (state.lottoIndex >= lottoCards.length) {
+                document.getElementById('lottoCounter').textContent = "Усі картки пройдені!";
+                document.getElementById('lottoTitle').textContent = "Рівень 1 пройдено!";
+                document.getElementById('lottoIcon').textContent = "🎉";
+                document.getElementById('lottoDesc').textContent = "Ви чудово класифікували всі дисперсні об'єкти з життя!";
+                document.getElementById('lottoButtonsArea').classList.add('hidden');
+                document.getElementById('lottoFeedback').classList.add('hidden');
+                return;
+            }
+
+            const card = lottoCards[state.lottoIndex];
+            document.getElementById('lottoCounter').textContent = `Картка ${state.lottoIndex + 1} з ${lottoCards.length}`;
+            document.getElementById('lottoTitle').textContent = card.title;
+            document.getElementById('lottoIcon').textContent = card.icon;
+            document.getElementById('lottoDesc').textContent = card.desc;
+            document.getElementById('lottoFeedback').classList.add('hidden');
+            document.getElementById('lottoButtonsArea').classList.remove('hidden');
+        }
+
+        function submitLotto(selectedType) {
+            const card = lottoCards[state.lottoIndex];
+            const feedbackBox = document.getElementById('lottoFeedback');
+            const feedbackIcon = document.getElementById('lottoFeedbackIcon');
+            const feedbackTitle = document.getElementById('lottoFeedbackTitle');
+            const feedbackBody = document.getElementById('lottoFeedbackBody');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (selectedType === card.type) {
+                playFx('success');
+                updateScore(15);
+                feedbackIcon.textContent = "✅";
+                feedbackTitle.className = "font-bold text-base text-emerald-400 mb-1";
+                feedbackTitle.textContent = "Правильно! (+15 балів)";
+                feedbackBody.textContent = card.exp;
+            } else {
+                playFx('error');
+                feedbackIcon.textContent = "❌";
+                feedbackTitle.className = "font-bold text-base text-rose-400 mb-1";
+                feedbackTitle.textContent = "Не зовсім так!";
+                feedbackBody.textContent = `Це не ${getGroupName(selectedType)}. ${card.exp}`;
+            }
+        }
+
+        function getGroupName(type) {
+            if (type === 'true_solution') return 'істинний розчин';
+            if (type === 'colloid') return 'колоїдний розчин';
+            return 'грубодисперсна система';
+        }
+
+        function nextLottoCard() {
+            playFx('click');
+            state.lottoIndex++;
+            renderLottoCard();
+        }
+
+        // MODULE 2: CANVAS VIRTUAL LAB
+        let canvas, ctx;
+        let particles = [];
+
+        function initCanvas() {
+            canvas = document.getElementById('tyndallCanvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            requestAnimationFrame(animateTyndall);
+        }
+
+        function resizeCanvas() {
+            if (!canvas || !canvas.parentElement) return;
+            const w = canvas.parentElement.clientWidth;
+            const h = canvas.parentElement.clientHeight;
+            if (w > 0 && h > 0) {
+                canvas.width = w;
+                canvas.height = h;
+                initParticles();
+            }
+        }
+
+        function initParticles() {
+            if (!canvas) return;
+            const beakerX = canvas.width * 0.3;
+            const beakerY = canvas.height * 0.15;
+            const beakerW = canvas.width * 0.4;
+            const beakerH = canvas.height * 0.7;
+
+            particles = [];
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: beakerX + 10 + Math.random() * (beakerW - 20),
+                    y: beakerY + 20 + Math.random() * (beakerH - 30),
+                    r: Math.random() * 2 + 1.5,
+                    vx: (Math.random() - 0.5) * 0.8,
+                    vy: (Math.random() - 0.5) * 0.8
+                });
+            }
+        }
+
+        function animateTyndall() {
+            if (!ctx || !canvas) return;
+
+            // Auto-resize when tab becomes visible
+            if (canvas.parentElement && (canvas.width !== canvas.parentElement.clientWidth || canvas.height !== canvas.parentElement.clientHeight)) {
+                resizeCanvas();
+            }
+
+            const w = canvas.width;
+            const h = canvas.height;
+
+            if (w === 0 || h === 0) {
+                requestAnimationFrame(animateTyndall);
+                return;
+            }
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Beaker Position
+            const beakerX = w * 0.3;
+            const beakerY = h * 0.15;
+            const beakerW = w * 0.4;
+            const beakerH = h * 0.7;
+
+            // Glass Beaker Fill
+            ctx.fillStyle = state.labSolution === 'salt' ? 'rgba(20, 184, 166, 0.08)' :
+                           state.labSolution === 'colloid' ? 'rgba(6, 182, 212, 0.22)' : 'rgba(245, 158, 11, 0.35)';
+            ctx.fillRect(beakerX, beakerY, beakerW, beakerH);
+
+            // Beaker Outline
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(beakerX, beakerY, beakerW, beakerH);
+
+            // Water Level Line
+            ctx.beginPath();
+            ctx.moveTo(beakerX, beakerY + 15);
+            ctx.lineTo(beakerX + beakerW, beakerY + 15);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Draw Laser & Beam
+            if (state.laserOn) {
+                // Laser Emitter Source
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(10, h * 0.5 - 10, 35, 20);
+                ctx.fillStyle = '#fca5a5';
+                ctx.fillRect(45, h * 0.5 - 4, 10, 8);
+
+                // Laser Beam Before Beaker
+                ctx.beginPath();
+                ctx.moveTo(55, h * 0.5);
+                ctx.lineTo(beakerX, h * 0.5);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Beam INSIDE Beaker (Tyndall Effect rendering)
+                if (state.labSolution === 'colloid') {
+                    // SPREADING LIGHT CONE (TYNDALL CONE)
+                    const grad = ctx.createLinearGradient(beakerX, h * 0.5, beakerX + beakerW, h * 0.5);
+                    grad.addColorStop(0, 'rgba(239, 68, 68, 0.9)');
+                    grad.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
+
+                    ctx.beginPath();
+                    ctx.moveTo(beakerX, h * 0.5 - 2);
+                    ctx.lineTo(beakerX + beakerW, h * 0.5 - 20);
+                    ctx.lineTo(beakerX + beakerW, h * 0.5 + 20);
+                    ctx.lineTo(beakerX, h * 0.5 + 2);
+                    ctx.closePath();
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Glowing Core Beam
+                    ctx.beginPath();
+                    ctx.moveTo(beakerX, h * 0.5);
+                    ctx.lineTo(beakerX + beakerW, h * 0.5);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                } else if (state.labSolution === 'salt') {
+                    // Invisible beam in true solution!
+                    ctx.beginPath();
+                    ctx.moveTo(beakerX, h * 0.5);
+                    ctx.lineTo(beakerX + beakerW, h * 0.5);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                } else {
+                    // Suspension - Scattered / Absorbed light
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(beakerX + 25, h * 0.5, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Laser Beam After Beaker
+                ctx.beginPath();
+                ctx.moveTo(beakerX + beakerW, h * 0.5);
+                ctx.lineTo(w - 10, h * 0.5);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Animate Colloidal / Suspension Particles
+            if (state.labSolution !== 'salt') {
+                ctx.fillStyle = state.labSolution === 'colloid' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(245, 158, 11, 0.9)';
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < beakerX + 5 || p.x > beakerX + beakerW - 5) p.vx *= -1;
+                    if (p.y < beakerY + 20 || p.y > beakerY + beakerH - 5) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, state.labSolution === 'suspension' ? p.r * 2 : p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            requestAnimationFrame(animateTyndall);
+        }
+
+        function setLabSolution(type) {
+            playFx('click');
+            state.labSolution = type;
+            document.querySelectorAll('.lab-sol-btn').forEach(btn => {
+                btn.classList.remove('border-teal-500', 'text-white');
+                btn.classList.add('border-slate-700', 'text-slate-300');
+            });
+
+            const activeBtn = document.getElementById(`labBtn-${type}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-700', 'text-slate-300');
+                activeBtn.classList.add('border-teal-500', 'text-white');
+            }
+
+            const tagTitle = document.getElementById('beakerTagTitle');
+            const tagDetail = document.getElementById('beakerTagDetail');
+
+            if (type === 'salt') {
+                tagTitle.textContent = "Істинний розчин";
+                tagTitle.className = "block text-xs font-extrabold text-teal-400";
+                tagDetail.textContent = "Частинки < 1 нм (NaCl)";
+            } else if (type === 'colloid') {
+                tagTitle.textContent = "Колоїдний розчин (Золь)";
+                tagTitle.className = "block text-xs font-extrabold text-cyan-400";
+                tagDetail.textContent = "Частинки 1–100 нм (Білок)";
+            } else {
+                tagTitle.textContent = "Суспензія (Грубодисперсна)";
+                tagTitle.className = "block text-xs font-extrabold text-amber-400";
+                tagDetail.textContent = "Частинки > 100 нм (CaCO₃)";
+            }
+        }
+
+        function toggleLaser() {
+            playFx('click');
+            state.laserOn = !state.laserOn;
+            const btn = document.getElementById('laserToggleBtn');
+            if (state.laserOn) {
+                btn.className = "px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs rounded-lg transition-colors shadow";
+                btn.innerHTML = `<i class="fa-solid fa-power-off mr-1"></i> ВИМКНУТИ`;
+            } else {
+                btn.className = "px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs rounded-lg transition-colors shadow";
+                btn.innerHTML = `<i class="fa-solid fa-power-off mr-1"></i> УВІМКНУТИ`;
+            }
+        }
+
+        function triggerCoagulationExperiment() {
+            setLabSolution('colloid');
+            state.laserOn = true;
+            document.getElementById('laserToggleBtn').className = "px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs rounded-lg transition-colors shadow";
+            document.getElementById('laserToggleBtn').innerHTML = `<i class="fa-solid fa-power-off mr-1"></i> ВИМКНУТИ`;
+
+            setTimeout(() => {
+                playFx('success');
+                setLabSolution('suspension');
+                const tagTitle = document.getElementById('beakerTagTitle');
+                const tagDetail = document.getElementById('beakerTagDetail');
+                tagTitle.textContent = "Коагуляція! (Пластівці)";
+                tagTitle.className = "block text-xs font-extrabold text-rose-400";
+                tagDetail.textContent = "Зсідання білка під дією H⁺";
+            }, 1000);
+        }
+
+        // LAB SCENARIO CASES
+        const labCases = [
+            {
+                title: "Кейс №1: Загадка променів у темряві",
+                question: "Водій уночі їде у тумані й вмикає фарне світло. Навпроти фар з'являється чітко помітний сяючий промінь-конус. Чому світло видно у тумані, але його не видно в сухому чистому повітрі?",
+                options: [
+                    { text: "Туман розсіює світло завдяки Ефекту Тіндаля на колоїдних краплях води.", correct: true },
+                    { text: "Вода в тумані вступає у хімічну реакцію заломлення з фотонами світла.", correct: false },
+                    { text: "Повітря повністю поглинає світло, а туман його підсилює.", correct: false }
+                ],
+                explanation: "Правильно! Краплі води у тумані мають розмір 1–100 нм. Вони викликають оптичний ефект Тіндаля (розсіювання світла у вигляді конуса)."
+            },
+            {
+                title: "Кейс №2: Пластівці у склянці з молоком",
+                question: "До теплого коров'ячого молока додали кілька крапель лимонного соку. Через хвилину молоко розділилося на сирні пластівці та сироватку. Яке це явище?",
+                options: [
+                    { text: "Пептизація внаслідок розбавлення водою.", correct: false },
+                    { text: "Коагуляція білка під дією солей/кислоти (електроліту).", correct: true },
+                    { text: "Утворення істинного розчину лактози.", correct: false }
+                ],
+                explanation: "Браво! Йони H⁺ із лимонної кислоти знімають електричний заряд із колоїдних частинок білка казеїну, викликаючи їх злипання та осадження (коагуляцію)."
+            }
+        ];
+
+        function renderLabCase() {
+            const caseData = labCases[state.labCaseIndex];
+            document.getElementById('labCaseCounter').textContent = `Кейс ${state.labCaseIndex + 1} з ${labCases.length}`;
+            document.getElementById('labCaseQuestionTitle').textContent = caseData.title;
+            document.getElementById('labCaseQuestionBody').textContent = caseData.question;
+
+            const optsBox = document.getElementById('labCaseOptions');
+            optsBox.innerHTML = '';
+
+            caseData.options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500 rounded-xl text-left text-xs font-semibold text-slate-200 transition-all flex items-center justify-between";
+                btn.innerHTML = `<span>${opt.text}</span> <i class="fa-regular fa-circle text-slate-500"></i>`;
+                btn.onclick = () => submitLabCase(opt.correct, caseData.explanation);
+                optsBox.appendChild(btn);
+            });
+
+            document.getElementById('labCaseFeedback').classList.add('hidden');
+        }
+
+        function submitLabCase(isCorrect, explanation) {
+            const feedbackBox = document.getElementById('labCaseFeedback');
+            const feedbackText = document.getElementById('labCaseFeedbackText');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playFx('success');
+                updateScore(20);
+                feedbackText.innerHTML = `<span class="text-emerald-400 font-bold">✅ Правильно (+20 балів):</span> ${explanation}`;
+            } else {
+                playFx('error');
+                feedbackText.innerHTML = `<span class="text-rose-400 font-bold">❌ Неправильно:</span> Спробуй ще раз проаналізувати умови ефекту Тіндаля та коагуляції.`;
+            }
+        }
+
+        function nextLabCase() {
+            playFx('click');
+            state.labCaseIndex = (state.labCaseIndex + 1) % labCases.length;
+            renderLabCase();
+        }
+
+        // MODULE 3: MATRIX BUILDER LOGIC
+        const matrixRules = {
+            'solid-liquid': {
+                name: "Суспензія (завись)",
+                icon: "🪨",
+                desc: "Грубодисперсна система з твердими частинками у рідкому середовищі.",
+                examples: ["Вапняне молоко [Ca(OH)₂ у H₂O]", "Глиняна бовтанка", "Суміш крейди з водою"]
+            },
+            'liquid-liquid': {
+                name: "Емульсія",
+                icon: "🥛",
+                desc: "Система з двох рідин, що не змішуються одна з одною.",
+                examples: ["Коров'яче молоко (краплі жиру у воді)", "Майонез", "Краплі нафти у воді", "Косметичний крем"]
+            },
+            'solid-gas': {
+                name: "Аерозоль (Дим / Пил)",
+                icon: "💨",
+                desc: "Тверді частинки сажі чи пилу, завислі у газі.",
+                examples: ["Дим від багаття", "Пил у повітрі кімнати"]
+            },
+            'liquid-gas': {
+                name: "Аерозоль (Туман / Спрей)",
+                icon: "🌫️",
+                desc: "Дрібні краплі рідини, завислі у газі.",
+                examples: ["Хмари та туман", "Аерозольний спрей / парфуми"]
+            },
+            'gas-liquid': {
+                name: "Піна",
+                icon: "🫧",
+                desc: "Бульбашки газу, розподілені у рідкому середовищі.",
+                examples: ["Мильна піна", "Збиті вершки", "Піна газованого напою"]
+            },
+            'gas-solid': {
+                name: "Тверда піна",
+                icon: "🧽",
+                desc: "Бульбашки газу, зафіксовані у твердому тілі.",
+                examples: ["Пемза (вулканічна порода)", "Пінопласт", "Хлібний м'якуш"]
+            },
+            'solid-solid': {
+                name: "Твердий золь",
+                icon: "💎",
+                desc: "Тверді частинки однієї речовини у твердому матриксі.",
+                examples: ["Рубінове скло (частинки Au у склі)", "Кольорові коштовні мінерали", "Деякі металеві сплави"]
+            }
+        };
+
+        function selectMatrixPhase(phase) {
+            playFx('click');
+            state.matrixPhase = phase;
+            document.querySelectorAll('.m-phase-btn').forEach(btn => btn.classList.remove('border-purple-500', 'bg-purple-950/40'));
+            const active = document.getElementById(`mPhase-${phase}`);
+            if (active) active.classList.add('border-purple-500', 'bg-purple-950/40');
+            evaluateMatrix();
+        }
+
+        function selectMatrixMedium(med) {
+            playFx('click');
+            state.matrixMedium = med;
+            document.querySelectorAll('.m-med-btn').forEach(btn => btn.classList.remove('border-cyan-500', 'bg-cyan-950/40'));
+            const active = document.getElementById(`mMed-${med}`);
+            if (active) active.classList.add('border-cyan-500', 'bg-cyan-950/40');
+            evaluateMatrix();
+        }
+
+        function evaluateMatrix() {
+            if (!state.matrixPhase || !state.matrixMedium) return;
+
+            const key = `${state.matrixPhase}-${state.matrixMedium}`;
+            const titleEl = document.getElementById('matrixResultTitle');
+            const iconEl = document.getElementById('matrixResultIcon');
+            const descEl = document.getElementById('matrixResultDesc');
+            const exBox = document.getElementById('matrixResultExamples');
+            const exList = document.getElementById('matrixExamplesList');
+
+            const match = matrixRules[key];
+
+            if (match) {
+                playFx('success');
+                if (!state.discoveredMatrix.has(key)) {
+                    state.discoveredMatrix.add(key);
+                    updateScore(15);
+                    document.getElementById('matrixDiscoveredCount').textContent = state.discoveredMatrix.size;
+                }
+
+                titleEl.textContent = match.name;
+                iconEl.textContent = match.icon;
+                descEl.textContent = match.desc;
+                exBox.classList.remove('hidden');
+                exList.innerHTML = '';
+                match.examples.forEach(ex => {
+                    const li = document.createElement('li');
+                    li.textContent = ex;
+                    exList.appendChild(li);
+                });
+            } else {
+                playFx('click');
+                titleEl.textContent = "Рідкісний тип";
+                iconEl.textContent = "🌀";
+                descEl.textContent = "Така комбінація є рідкісною або утворює гомогенну суміш.";
+                exBox.classList.add('hidden');
+            }
+        }
+
+        // MODULE 4: RAPID BLITZ DATA
+        const blitzQuestions = [
+            {
+                text: "Коров'яче молоко та вапняне молоко належать до одного типу дисперсних систем — емульсій.",
+                answer: false,
+                explanation: "НЕПРАВДА! Коров'яче молоко — це емульсія (жир у воді), а вапняне молоко — суспензія (твердий Ca(OH)₂ у воді)."
+            },
+            {
+                text: "Ефект Тіндаля спостерігається в істинних розчинах кухонної солі та цукру.",
+                answer: false,
+                explanation: "НЕПРАВДА! В істинних розчинах частинки занадто малі (< 1 нм) і не розсіюють світло. Конус виникає лише в колоїдах."
+            },
+            {
+                text: "Утворення дельти річки при її впадінні в море є природним прикладом коагуляції під дією солей-електролітів.",
+                answer: true,
+                explanation: "ПРАВДА! Річкова вода несе колоїдний мул. Морські солі (Na⁺, Mg²⁺) викликають коагуляцію та осадження мулу."
+            },
+            {
+                text: "Гель — це текучий рідкий колоїдний розчин.",
+                answer: false,
+                explanation: "НЕПРАВДА! Текучим є ЗОЛЬ. А ГЕЛЬ — це застигла студенеподібна система із просторовою сіткою (желатин, мармелад)."
+            },
+            {
+                text: "Додавання спирту або нагрівання викликає коагуляцію яєчного білка.",
+                answer: true,
+                explanation: "ПРАВДА! Спирт і висока температура руйнують структуру колоїду та викликають зсідання (коагуляцію)."
+            }
+        ];
+
+        function startBlitzTimer() {
+            clearInterval(state.blitzTimer);
+            state.blitzTimeLeft = 15;
+            document.getElementById('blitzTimeLeft').textContent = state.blitzTimeLeft;
+
+            state.blitzTimer = setInterval(() => {
+                state.blitzTimeLeft--;
+                document.getElementById('blitzTimeLeft').textContent = state.blitzTimeLeft;
+                if (state.blitzTimeLeft <= 0) {
+                    clearInterval(state.blitzTimer);
+                    answerBlitz(null);
+                }
+            }, 1000);
+        }
+
+        function renderBlitzQuestion() {
+            if (state.blitzIndex >= blitzQuestions.length) {
+                showFinalModal();
+                return;
+            }
+
+            const q = blitzQuestions[state.blitzIndex];
+            document.getElementById('blitzQuestionCounter').textContent = `Питання ${state.blitzIndex + 1}/${blitzQuestions.length}`;
+            document.getElementById('blitzQuestionText').textContent = `"${q.text}"`;
+            document.getElementById('blitzFeedback').classList.add('hidden');
+            startBlitzTimer();
+        }
+
+        function answerBlitz(userAns) {
+            clearInterval(state.blitzTimer);
+            const q = blitzQuestions[state.blitzIndex];
+            const feedbackBox = document.getElementById('blitzFeedback');
+            const feedbackIcon = document.getElementById('blitzFeedbackIcon');
+            const feedbackTitle = document.getElementById('blitzFeedbackTitle');
+            const feedbackExp = document.getElementById('blitzFeedbackExplanation');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (userAns === q.answer) {
+                playFx('success');
+                updateScore(25);
+                feedbackIcon.textContent = "🎉";
+                feedbackTitle.className = "font-bold text-sm text-emerald-400 mb-1";
+                feedbackTitle.textContent = "Абсолютно правильно! (+25 балів)";
+            } else {
+                playFx('error');
+                feedbackIcon.textContent = "⚠️";
+                feedbackTitle.className = "font-bold text-sm text-rose-400 mb-1";
+                feedbackTitle.textContent = userAns === null ? "Час вичерпано!" : "Пастка спрацювала!";
+            }
+            feedbackExp.textContent = q.explanation;
+        }
+
+        function nextBlitzQuestion() {
+            playFx('click');
+            state.blitzIndex++;
+            renderBlitzQuestion();
+        }
+
+        // TAB SWITCHING LOGIC
+        function switchTab(tabId) {
+            playFx('click');
+            state.currentTab = tabId;
+
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+
+            // Deactivate all buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('bg-teal-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            });
+
+            // Show current tab content & button
+            const activeContent = document.getElementById(`module-${tabId}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('bg-teal-600', 'text-white', 'shadow-md');
+            }
+
+            if (tabId === 'lab') {
+                setTimeout(() => {
+                    resizeCanvas();
+                }, 50);
+            }
+
+            if (tabId === 'blitz' && state.blitzIndex === 0) {
+                renderBlitzQuestion();
+            }
+        }
+
+        function showFinalModal() {
+            playFx('success');
+            document.getElementById('certPoints').textContent = state.score;
+            document.getElementById('certNmtScore').textContent = `${state.nmtScore} / 200`;
+
+            const certStatus = document.getElementById('certStatus');
+            if (state.nmtScore >= 190) {
+                certStatus.textContent = "🏆 Експерт НМТ з Хімії (200 балів)";
+                certStatus.className = "font-bold text-emerald-400";
+            } else if (state.nmtScore >= 160) {
+                certStatus.textContent = "🌟 Відмінна підготовка (170-185 балів)";
+                certStatus.className = "font-bold text-cyan-400";
+            } else {
+                certStatus.textContent = "📚 Базовий рівень засвоєно";
+                certStatus.className = "font-bold text-amber-400";
+            }
+
+            document.getElementById('resultModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+        }
+
+        function resetAllProgress() {
+            state.score = 0;
+            state.nmtScore = 100;
+            state.lottoIndex = 0;
+            state.labCaseIndex = 0;
+            state.blitzIndex = 0;
+            state.discoveredMatrix.clear();
+            document.getElementById('matrixDiscoveredCount').textContent = '0';
+            updateScore(0);
+            closeModal();
+            renderLottoCard();
+            renderLabCase();
+            switchTab('lotto');
+        }
+
+        window.onload = function() {
+            initCanvas();
+            renderLottoCard();
+            renderLabCase();
+            setLabSolution('salt');
+        };
+    </script>
+</body>
+</html>
